@@ -123,4 +123,68 @@ describe('modify_fname', function()
       ':S',
       "'hello there! quote '\\'' newline\n'")
   end)
+
+  describe('simple examples from ":help filename-modifiers"', function()
+    local filename = 'src/version.c'
+
+    itp(':h', function()
+      expect_fully_used_expand(filename, ':h', 'src')
+    end)
+
+    itp(':t', function()
+      expect_fully_used_expand(filename, ':t', 'version.c')
+    end)
+
+    itp(':r', function()
+      expect_fully_used_expand(filename, ':r', 'src/version')
+    end)
+
+    itp(':t:r', function()
+      expect_fully_used_expand(filename, ':t:r', 'version')
+    end)
+
+    itp(':e', function()
+      expect_fully_used_expand(filename, ':e', 'c')
+    end)
+
+    itp(':s?version?main?', function()
+      expect_fully_used_expand(filename, ':s?version?main?', 'src/main.c')
+    end)
+  end)
+
+  describe('advanced examples from ":help filename-modifiers"', function()
+    local filename = "src/version.c.gz"
+
+    itp(':e', function()
+      expect_fully_used_expand(filename, ':e', 'gz')
+    end)
+
+    itp(':e:e', function()
+      expect_fully_used_expand(filename, ':e:e', 'c.gz')
+    end)
+
+    itp(':e:e:e', function()
+      expect_fully_used_expand(filename, ':e:e:e', 'c.gz')
+    end)
+
+    itp(':e:e:r', function()
+      expect_fully_used_expand(filename, ':e:e:r', 'c')
+    end)
+
+    itp(':r', function()
+      expect_fully_used_expand(filename, ':r', 'src/version.c')
+    end)
+
+    itp(':r:e', function()
+      expect_fully_used_expand(filename, ':r:e', 'c')
+    end)
+
+    itp(':r:r', function()
+      expect_fully_used_expand(filename, ':r:r', 'src/version')
+    end)
+
+    itp(':r:r:r', function()
+      expect_fully_used_expand(filename, ':r:r:r', 'src/version')
+    end)
+  end)
 end)
