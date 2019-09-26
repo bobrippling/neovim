@@ -23754,6 +23754,22 @@ void reset_v_option_vars(void)
   set_vim_var_string(VV_OPTION_TYPE, NULL, -1);
 }
 
+#ifdef ROB_DEBUG
+static void
+debug(void)
+{
+  if(!getenv("PLZ_DEBUG"))
+    return;
+
+  FILE *f = fopen("/tmp/nvim-test", "w");
+  if(!f)
+    return;
+  fprintf(f, "%d\n", getpid());
+  fclose(f);
+  sleep(9999);
+}
+#endif
+
 /*
  * Adjust a filename, according to a string of modifiers.
  * *fnamep must be NUL terminated when called.  When returning, the length is
@@ -23771,6 +23787,10 @@ modify_fname(
     size_t *fnamelen          // length of fnamep
 )
 {
+#ifdef ROB_DEBUG
+  debug();
+#endif
+
   int valid = 0;
   char_u      *tail;
   char_u      *s, *p, *pbuf;
