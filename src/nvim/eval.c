@@ -23939,9 +23939,12 @@ repeat:
       if (s[0] == '.')
         break;
     if (src[*usedlen + 1] == 'e') {             /* :e */
-      if (s > tail) {
-        *fnamelen += (size_t)(*fnamep - (s + 1));
-        *fnamep = s + 1;
+      if (s > tail || (0 && is_second_e && s == tail)) {
+	/* we stopped at a '.' (so anchor to &'.' + 1) */
+	char_u *newstart = s + 1;
+	size_t distance_stepped_back = *fnamep - newstart;
+        *fnamelen += distance_stepped_back;
+        *fnamep = newstart;
       } else if (*fnamep <= tail)
         *fnamelen = 0;
     } else {                          /* :r */
