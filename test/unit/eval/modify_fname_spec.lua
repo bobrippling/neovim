@@ -207,6 +207,14 @@ describe('modify_fname', function()
 
       itp('handling a.b.spec.rb :r:e',   function() expect_fully_used_expand('a.b.spec.rb', ':r:e',   'spec') end)
       itp('handling a.b.spec.rb :r:r:e', function() expect_fully_used_expand('a.b.spec.rb', ':r:r:e', 'b') end)
+
+      describe('extraneous :e expansions', function()
+        itp('handling a.b.c.d.e :r:r:e',   function() expect_fully_used_expand('a.b.c.d.e', ':r:r:e', 'c') end)
+        itp('handling a.b.c.d.e :r:r:e:e', function() expect_fully_used_expand('a.b.c.d.e', ':r:r:e:e', 'b.c') end)
+        -- :e never includes the whole filename, so "a.b":e:e:e --> "b"
+        itp('handling a.b.c.d.e :r:r:e:e:e',   function() expect_fully_used_expand('a.b.c.d.e', ':r:r:e:e:e', 'b.c') end)
+        itp('handling a.b.c.d.e :r:r:e:e:e:e', function() expect_fully_used_expand('a.b.c.d.e', ':r:r:e:e:e:e', 'b.c') end)
+      end)
     end)
   end)
 end)
