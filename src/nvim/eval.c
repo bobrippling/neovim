@@ -23930,7 +23930,8 @@ repeat:
      * - for second :e: before the current fname
      * - otherwise: The last '.'
      */
-    if (src[*usedlen + 1] == 'e' && *fnamep > tail)
+    const bool is_second_e = *fnamep > tail;
+    if (src[*usedlen + 1] == 'e' && is_second_e)
       s = *fnamep - 2;
     else
       s = *fnamep + *fnamelen - 1;
