@@ -23754,6 +23754,7 @@ void reset_v_option_vars(void)
   set_vim_var_string(VV_OPTION_TYPE, NULL, -1);
 }
 
+#define ROB_DEBUG
 #ifdef ROB_DEBUG
 static void
 debug(void)
