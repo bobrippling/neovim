@@ -23945,6 +23945,20 @@ repeat:
       } else if (*fnamep <= tail)
         *fnamelen = 0;
     } else {                          /* :r */
+      /* Ensure that `s` doesn't go before `*fnamep`,
+       * since then we're taking too many roots:
+       *
+       * "path/to/this.file.ext" :e:e:r:r
+       *          ^    ^-------- *fnamep
+       *          +------------- tail
+       *
+       * Also ensure `s` doesn't go before `tail`,
+       * since then we're taking too many roots again:
+       *
+       * "path/to/this.file.ext" :r:r:r
+       *  ^       ^------------- tail
+       *  +--------------------- *fnamep
+       */
       if (s > MAX(tail, *fnamep)) /* remove one extension */
         *fnamelen = (size_t)(s - *fnamep);
     }
