@@ -3422,6 +3422,10 @@ char *skip_range(const char *cmd, int *ctx)
   // Skip ":" and white space.
   cmd = skip_colon_white(cmd, false);
 
+  // Skip "*" used for Visual range.
+  if (*cmd == '*')
+      cmd = skipwhite(cmd + 1);
+
   return (char *)cmd;
 }
 

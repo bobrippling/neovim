@@ -27,6 +27,10 @@ func Test_complete_tab()
   call feedkeys(":e %\t\r", "tx")
   call assert_equal('e Xtestfile', @:)
   call delete('Xtestfile')
+
+  " * is an alias for '<,'>, ensure we parse it
+  call feedkeys(":*wr\t", "tx") " invalid command, but we expand to :write, parsing the *
+  call assert_equal('*write', @:)
 endfunc
 
 func Test_complete_list()
