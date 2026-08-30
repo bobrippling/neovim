@@ -452,6 +452,52 @@ describe(':terminal window', function()
     ]])
   end)
 
+  it('does not scroll to top on resize with SIGWINCH-style full redraw (terminal mode)', function()
+    -- Screen is 50 cols x 6 rows (7-row window minus status line).
+    -- Fill scrollback: send 10 lines, 4 go into scrollback.
+    feed_data({ 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10' })
+    screen:expect({ any = 'r10' })
+    retry(nil, nil, function()
+      local topline = eval('winsaveview()["topline"]')
+      assert(topline > 1, 'expected scrollback, got topline=' .. topline)
+    end)
+
+    -- Resize (triggers SIGWINCH), then simulate full redraw ending cursor at bottom.
+    screen:try_resize(50, 6)  -- shrink to 5-row terminal
+    feed_csi('H') feed_csi('2J')  -- cursor home + clear
+    feed_data({ 'R1', 'R2', 'R3', 'R4', 'R5' })
+    feed_csi('5;1H')  -- cursor to last row
+    screen:expect({ any = 'R5' })
+
+    local topline = eval('winsaveview()["topline"]')
+    assert(topline > 1, 'topline jumped to top of scrollback: ' .. topline)
+  end)
+
+  it('does not scroll to top on resize with SIGWINCH-style full redraw (normal mode)', function()
+    -- Same scenario but with scrolloff set and user in normal mode.
+    command('set scrolloff=5')
+    feed_data({ 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10' })
+    screen:expect({ any = 'r10' })
+    -- Switch to normal mode; cursor should be at the bottom (nvim cursor = terminal cursor).
+    feed([[<C-\><C-N>]])
+    retry(nil, nil, function()
+      local topline = eval('winsaveview()["topline"]')
+      assert(topline > 1, 'expected scrollback, got topline=' .. topline)
+    end)
+
+    -- In normal mode: resize + SIGWINCH-style full redraw.
+    screen:try_resize(50, 6)
+    feed('i')  -- re-enter terminal mode to send the redraw
+    feed_csi('H') feed_csi('2J')
+    feed_data({ 'R1', 'R2', 'R3', 'R4', 'R5' })
+    feed_csi('5;1H')
+    screen:expect({ any = 'R5' })
+    feed([[<C-\><C-N>]])
+
+    local topline = eval('winsaveview()["topline"]')
+    assert(topline > 1, 'topline jumped to top of scrollback: ' .. topline)
+  end)
+
   it('updates terminal size', function()
     skip(is_os('win'), "Windows doesn't show all lines?")
     screen:set_default_attr_ids({
