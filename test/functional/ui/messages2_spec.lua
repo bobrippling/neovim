@@ -1441,4 +1441,19 @@ describe('messages2', function()
                                                            |
     ]])
   end)
+
+  -- Regression: :<Esc> with cmdheight=0 and ui2 caused cursor to jump
+  it('cursor does not jump after :<Esc> with cmdheight=0', function()
+    command('set cmdheight=0 splitbelow')
+    command('help state()')
+    -- Cursor should be on a line starting with "state"
+    local line_before = api.nvim_get_current_line()
+    assert(line_before:match('^state'), 'expected cursor on state() line, got: ' .. line_before)
+    feed(':<Esc>')
+    local line_after = api.nvim_get_current_line()
+    assert(
+      line_after:match('^state'),
+      'cursor jumped after :<Esc>; expected state() line, got: ' .. line_after
+    )
+  end)
 end)
