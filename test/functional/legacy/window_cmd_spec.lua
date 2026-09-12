@@ -409,6 +409,46 @@ it("'winfixwidth/height' does not leave stray vseps/statuslines", function()
   eq(4, fn.winheight(2))
 end)
 
+-- Regression: switching 'splitkeep' from "cursor" to "screen" left w_prev_winrow
+-- stale for windows created while splitkeep=cursor, because win_fix_scroll()
+-- returns immediately for cursor mode and never updates that field.  A later
+-- cmdheight change then triggered win_fix_scroll() with the stale value, which
+-- computed a huge bogus scroll diff and caused a phantom jumplist entry.
+it("'splitkeep'=screen does not add phantom jump when cmdheight changes after split", function()
+  clear()
+  -- splitkeep defaults to "cursor"; create a split so the new bottom window is
+  -- created with w_prev_winrow still 0 (win_fix_scroll returns early for cursor
+  -- mode and never updates that field).
+  -- 12 rows: 5 top + statusline + 4 bottom + statusline + 1 cmdline.
+  Screen.new(40, 12)
+  exec([[
+    set splitbelow scrolloff=0
+    call setline(1, range(1, 100))
+    split
+    " Move cursor to last visible line so it is at risk of being pushed off when
+    " the window shrinks by one row.
+    normal! L
+  ]])
+  local cursor_before = fn.getcurpos()
+  -- Jumplist should be empty at this point.
+  eq('\n jump line  col file/text\n>', fn.execute('jumps'))
+
+  -- Switch to splitkeep=screen.  did_set_splitkeep() resets w_prev_height for
+  -- all windows, but (before the fix) did NOT reset w_prev_winrow, leaving the
+  -- bottom window with a stale value of 0.
+  command('set splitkeep=screen')
+
+  -- Changing cmdheight triggers command_height() → win_fix_scroll().  The
+  -- stale w_prev_winrow caused a huge bogus scroll diff that moved the cursor
+  -- out of view, which then caused win_fix_cursor() to fire setmark('\'') and
+  -- relocate the cursor — a phantom jumplist entry.
+  command('set cmdheight=2')
+
+  -- No jump should have been added and cursor should not have moved.
+  eq('\n jump line  col file/text\n>', fn.execute('jumps'))
+  eq(cursor_before, fn.getcurpos())
+end)
+
 -- oldtest: Test_resize_from_another_tabpage()
 it('resizing window from another tabpage', function()
   clear()
